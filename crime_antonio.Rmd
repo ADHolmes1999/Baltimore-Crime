@@ -1,0 +1,209 @@
+---
+title: "Baltimore Crime Analysis"
+author: "Antonio Holmes"
+date: "3/30/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+## install and load packages tidyverse, lubridate
+library(tidyverse)
+library(lubridate)
+library(scales)
+```
+
+*Note*: If you try to Knit this document at this time, you *will* get an error because there is code in this document that has to be edited (by you!) before it will be able to successfully knit!
+
+## Final Project
+
+This exercise has been generated to practice everything you have learned in this course set.
+
+### GitHub Setup
+
+To get started, you'll want to go to GitHub and start a new repository:
+
+- Call this repository `final_project`. 
+- Add a short description
+- Check the box to "Initialize this repository with a README. 
+- Click `Create Repository`
+
+Once the repository has been created, Click on `Clone or download` and copy the "Clone with HTTPS" link provided. You'll use this to clone your repo in RStudio Cloud.
+
+**Note**: If you're stuck on this, these steps were covered in detail in an earlier course: [Version Control](https://leanpub.com/universities/courses/jhu/version-control). Refer to the materials in this course if you're stuck on this part of the project.
+
+### RStudio Cloud Setup
+
+Go to RStudio Coud and create a new project based on Github. As discussed previously, you'll want all your data science projects to be organized from the very beginning. Let's do that now!
+
+First, use `cd` to get yourself into the directory of your GitHub Project.  
+
+Once in the correct directory, use `mkdir` in the terminal to create folders with the following structure:
+
+- data/
+  - raw_data/
+  - tidy_data/
+- code/
+  - raw_code/
+  - final_code/
+- figures/
+  - exploratory_figures/
+  - explanatory_figures/
+- products/
+  - writing/
+
+Upload the data file into the tidy_data folder and this .Rmd file into the main project directory.
+
+Once the .Rmd document is in the correct folder, you'll want to **change the author of this document** to your name at the top of the .Rmd document (in the YAML). Save this change before moving to the next step.
+
+**Note**: If you're stuck on this, these steps were covered in detail in an earlier course: [Organizing Data Science Projects](https://leanpub.com/universities/courses/jhu/cbds-organizing). Refer to the materials in this course if you're stuck on this part of the project.
+
+### Pushing to GitHub
+
+You'll want to save changes to your project regularly by pushing them to GitHub. Now that you've got your file structure set up and have added a code file (.Rmd), it's a good time to stage, commit, and push these changes to GitHub. Do so now, and then take a long on GitHub to see the changes on their website!
+
+**Note**: If you're stuck on this, these steps were covered in detail in an earlier course: [Version Control](https://leanpub.com/universities/courses/jhu/version-control). Refer to the materials in this course if you're stuck on this part of the project.
+
+
+### The data
+
+Violent crime in the United States has fallen over the last two decades. Even though the violent crime rate has been decreasing since 1990, The United States had the second highest prisoner rate, with 693 prisoners per 100,000 of the national population. And Baltimore, Maryland is infamous for its very high crime rates. According to Forbes, Baltimore is the seventh dangerous city in the United States. The violent crime rate is 1417 per 100.000 residents in a population of 626.848 people in 2017 so Baltimore is the one of the cities which is carrying high risk for local people.
+
+The data for this project is from Open Baltimore represents Part I victim based crime data. We first need to load the data and clean the column names. Use the appropriate packages for importing the data and cleaning column names.
+
+```{r}
+crime <- read_csv("data/tidy_data/BPD_Part_1_Victim_Based_Crime_Data 2.csv")%>% clean_names()
+
+```
+
+What are the column names and how many columns are in the data? How many observations are in the data? 15 columns and 276529 observations.
+
+What is the structure of the column `crime_date`? We need to convert the column to date format. Use the appropriate function from the **lubridate** package to convert the column to date format. Save the new column back to the `crime_date` column. 
+
+```{r}
+crime <- crime %>% mutate(crime_date = mdy(crime_date))
+    
+```
+
+We can use the function `floor_date()` from the package **lubridate** to calculate the number of crime per month. First we will create a new variable called `crime_month` like below. Use the appropriate function from the package **dplyr** to find the number of crimes per month.
+
+```{r}
+crime_month <- crime %>%
+  mutate(month = floor_date(crime_date, "month")) %>%
+  group_by(month) %>% 
+  summarize(n = n())
+    
+```
+
+Now, use **ggplot2** to plot the crime rate over time using the new variable you created. You can use `geom_line()` for this purpose
+
+```{r}
+ggplot(crime_month, aes(month,n)) + geom_line()
+    
+```
+
+Can you guess why in the very last period crime has dropped so significantly? This is mainly due to the fact that there are incomplete records for the last month in the data (e.g. they stopped collecting data half way through the month). Let's get rid of all the data in the last month we have data available. You should use the function ? from the package **dplyr** and the function ? for doing that.
+
+```{r}
+crime_month <- crime_month %>%
+  filter(month != max(month))
+```
+
+Now plot the same geom_line above.
+
+
+```{r}
+ggplot(crime_month, aes(month,n)) + geom_line()
+    
+```
+
+Did you get rid of the sudden drop in the crime rate? Now, let's modify our plot by adding month labels to the X axis. Add the following code to the end of your ggplot code: `scale_x_date(date_breaks = "6 month", labels = date_format("%Y %b"))`
+
+
+```{r}
+ggplot(crime_month, aes(month,n)) + geom_line() + scale_x_date(date_breaks = "6 month", labels = date_format("%Y %b"))
+    
+    
+```
+
+Do you see a trend? Which months of the year crime is at the lowest? Which months of the year crime rate is at the highest?   Yes, the lowest month is feb and the highest is oct.
+
+What is the structure of the column `crime_time`? We want to extract the hour of the crime from this column. Use the appropriate function from the **lubridate** function to extract hours. Google or the package's manual would probably be your best help. Save the new column back to the `crime_time` column.
+
+```{r}
+crime <- crime %>% mutate(strptime = crime_time, format = "%H")
+    
+```
+
+Use any plot or tabe to compare crime rate in different times of the day (using the variable you created above). Add your code below. Most crimes happens during what time of the day?
+
+```{r}
+crime %>% 
+    
+```
+
+
+Now, let's group crimes by where they happen. Use `geom_bar()` from **ggplot2** to show crime rates in each neighborhood in Baltimore. You should `group_by` using the column `district`. 
+
+```{r}
+crime %>% 
+    group_by(district) %>% 
+  summarize(n = n()) %>%
+  ggplot(data = crime, aes(crime_date, district) + geom_bar(stat="identity"))
+```
+
+Create a variable called `year` that captures the year of each crime. Then create a geom_bar that shows the share of each crime type (use column `description`) in each years overall crime. You should recreate the graph I sent you.
+
+
+
+```{r}
+year <- crime %>%
+  mutate(year = floor_date(crime_date, "year")) %>% 
+  group_by(year) %>% 
+  summarize(n = n()) %>%
+  
+    
+```
+
+
+
+
+Finally, if the city manager asks you to investigate if the crime rates in certain districts has gone up or down, how would you present your findings. You can use any type of graph. Add your code bellow.
+
+```{r}
+ggplot(crime) +
+    
+```
+
+
+Congratulations! You have completed the project. There are a few final notes:
+
+### Add Markdown Text to .Rmd
+
+Before finalizing your project you'll want be sure there are **comments in your code chunks** and **text outside of your code chunks** to explain what you're doing in each code chunk. These explanations are incredibly helpful for someone who doesn't code or someone unfamiliar to your project.
+
+**Note**: If you're stuck on this, these steps were covered in detail in an earlier course: [Introduction to R](https://leanpub.com/universities/courses/jhu/introduction-to-r). Refer to the R Markdown lesson in this course if you're stuck on this part (or the next part) of the project.
+
+
+### Knit your R Markdown Document
+
+Last but not least, you'll want to **Knit your .Rmd document into an HTML document**. If you get an error, take a look at what the error says and edit your .Rmd document. Then, try to Knit again! Troubleshooting these error messages will teach you a lot about coding in R.
+
+### A Few Final Checks
+
+A complete project should have:
+
+- Completed code chunks throughout the .Rmd document (your RMarkdown document should Knit without any error)
+- README.md text file explaining your project
+- Comments in your code chunks
+- Answered all questions throughout this exercise.
+
+### Final `push` to GitHub
+
+Now that you've finalized your project, you'll do one final **push to GitHub**. `add`, `commit`, and `push` your work to GitHub. Navigate to your GitHub repository, and answer the final question below! 
+
+**Note**: If you're stuck on this, these steps were covered in detail in an earlier course: [Version Control](https://leanpub.com/universities/courses/jhu/version-control). Refer to the materials in this course if you're stuck on this part of the project.
+
+At the end, submit the link to your github repository to us.
+
+? Submit the URL to your `final_project` GitHub repository below.
