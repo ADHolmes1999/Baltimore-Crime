@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(lubridate)
 library(scales)
+library(janitor)
 ```
 
 *Note*: If you try to Knit this document at this time, you *will* get an error because there is code in this document that has to be edited (by you!) before it will be able to successfully knit!
@@ -159,7 +160,7 @@ Create a variable called `year` that captures the year of each crime. Then creat
 
 
 ```{r}
-crime %>%
+year <- crime %>%
   mutate(year = year(crime_date)) %>% 
   group_by(year) %>% 
   summarize(n = n()) %>% 
@@ -173,10 +174,12 @@ crime %>%
 Finally, if the city manager asks you to investigate if the crime rates in certain districts has gone up or down, how would you present your findings. You can use any type of graph. Add your code bellow.
 
 ```{r}
-district_crime <- crime %>%
-  group_by(district) %>%
-  summarize(n = n()) %>% 
-  ggplot(aes(x = district, y = n)) + geom_line()
+crime %>%  mutate(year = year(crime_date)) %>% 
+  group_by(district, year) %>%
+  summarize(n = n()) %>%
+  drop_na(district) %>%
+  filter(year != 2017) %>% 
+  ggplot(aes(x = year, y = n, color= district)) + geom_line()
 
 ```
 
