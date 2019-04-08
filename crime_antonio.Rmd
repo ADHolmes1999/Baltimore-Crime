@@ -131,14 +131,17 @@ Do you see a trend? Which months of the year crime is at the lowest? Which month
 What is the structure of the column `crime_time`? We want to extract the hour of the crime from this column. Use the appropriate function from the **lubridate** function to extract hours. Google or the package's manual would probably be your best help. Save the new column back to the `crime_time` column.
 
 ```{r}
-crime <- crime %>% mutate(strptime = crime_time, format = "%H")
+crime <- crime %>% mutate(crime_hour = hour(crime_time))
     
 ```
 
 Use any plot or tabe to compare crime rate in different times of the day (using the variable you created above). Add your code below. Most crimes happens during what time of the day?
 
 ```{r}
-crime %>% 
+crime %>% group_by(crime_hour) %>%
+  summarize(n=n()) %>% 
+arrange(-n)
+  
     
 ```
 
@@ -146,23 +149,22 @@ crime %>%
 Now, let's group crimes by where they happen. Use `geom_bar()` from **ggplot2** to show crime rates in each neighborhood in Baltimore. You should `group_by` using the column `district`. 
 
 ```{r}
-crime %>% 
-    group_by(district) %>% 
+crime %>%
+  group_by(district) %>% 
   summarize(n = n()) %>%
-  ggplot(data = crime, aes(crime_date, district) + geom_bar(stat="identity"))
+  ggplot(aes(x = reorder(district,n),y = n)) + geom_bar(stat="identity") + coord_flip()
 ```
 
 Create a variable called `year` that captures the year of each crime. Then create a geom_bar that shows the share of each crime type (use column `description`) in each years overall crime. You should recreate the graph I sent you.
 
 
-
 ```{r}
-year <- crime %>%
-  mutate(year = floor_date(crime_date, "year")) %>% 
+crime %>%
+  mutate(year = year(crime_date)) %>% 
   group_by(year) %>% 
-  summarize(n = n()) %>%
+  summarize(n = n()) %>% 
+  ggplot(aes(x = year,y = n)) + geom_bar(stat="identity")
   
-    
 ```
 
 
@@ -171,8 +173,11 @@ year <- crime %>%
 Finally, if the city manager asks you to investigate if the crime rates in certain districts has gone up or down, how would you present your findings. You can use any type of graph. Add your code bellow.
 
 ```{r}
-ggplot(crime) +
-    
+district_crime <- crime %>%
+  group_by(district) %>%
+  summarize(n = n()) %>% 
+  ggplot(aes(x = district, y = n)) + geom_line()
+
 ```
 
 
